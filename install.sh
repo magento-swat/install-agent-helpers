@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 
+installDaemon=
 agentPath=
 appName=
 license=
@@ -62,8 +63,34 @@ verifySignature() {
   cd -
 }
 
+canBeInstalledAsService() {
+  [[ $(id -u) -eq 0 ]] && return;
+
+  echo "Do you have a root access for the infrastracture environment?"
+  select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) echo "Run the install script under your root user."
+              echo "The root access is required to install and configure a new service."
+          exit;;
+        No ) 
+          return 2
+          break;;
+    esac
+  done
+}
+
+installAndConfigureCron() {
+  (crontab -l ; echo "* * * * * flock -n /tmp/swat-agent.lockfile -c 'source $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1") | sort - | uniq - | crontab -
+}
+
+installAndConfigureDaemon() {
+  echo "Next step: Configure agent as a daemon service. Follow the installation guide 'Agent as a daemon service'"
+}
+
 checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
 # /usr/local/swat-agent see: https://refspecs.linuxfoundation.org/FHS_2.3/fhs-2.3.html
+canBeInstalledAsService && installDaemon=1
+[ "$installDaemon" ] && echo "Installing as a service" || echo "Installing agent as a cron"
 agentPath=$(askWriteableDirectory "Where to download Site Wide Analysis Agent" "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
 appName=$(askRequiredField "Enter agent credentials App Name (Provided by Adobe Commerce)")
@@ -92,27 +119,26 @@ appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 set -x
 wget -qP "$agentPath" https://updater.swat.magento.com/launcher/launcher.linux-amd64.tar.gz
 tar -xf "$agentPath/launcher.linux-amd64.tar.gz" -C "$agentPath"
-verifySignature
-
-echo "SWAT_AGENT_APP_NAME=$appName" > "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_LICENSE_KEY=$license" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_PHP_PATH=$phpPath" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_MAGENTO_PATH=$appRoot" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_DB_USER=$appConfigVarDBUser" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_DB_PASSWORD=$appConfigVarDBPass" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_DB_HOST=$appConfigVarDBHost" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_BACKEND_HOST=check.swat.magento.com:443" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
-echo "SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
 set +x
+verifySignature
+[ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
+
+exportVariables="export "
+[ "$installDaemon" ] && exportVariables=""
+echo "${exportVariables}SWAT_AGENT_APP_NAME=$appName" > "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_LICENSE_KEY=$license" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_PHP_PATH=$phpPath" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_MAGENTO_PATH=$appRoot" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_USER=$appConfigVarDBUser" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PASSWORD=$appConfigVarDBPass" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_HOST=$appConfigVarDBHost" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=check.swat.magento.com:443" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
 
 printSuccess "Site Wide Analysis Tool Agent is successfully installed $agentPath"
-echo "SWAT agent configuration file created $agentPath/swat-agent.env"
-echo "SWAT agent is copied $agentPath/scheduler"
-echo "Optional: you can add symlink ln -s $agentPath/scheduler /usr/local/bin/scheduler"
-echo "Next step: Configure daemon or crontab. If you have a root access please follow the installation guide and configure a daemon. If you do not have a root access you can configure cronjob as below: "
-echo "* * * * * flock -n /tmp/swat-agent.lockfile -c 'set +o allexport; source $agentPath/swat-agent.env; set -o allexport; $agentPath/scheduler' >> /path/to/swat-agent/errors.log 2>&1"
+[ "$installDaemon" ] && printSuccess "Site Wide Analysis Agent has been installed" || printSuccess "Cronjob is configured. Review the command crontab -l"
