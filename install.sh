@@ -80,7 +80,7 @@ canBeInstalledAsService() {
 }
 
 installAndConfigureCron() {
-  (crontab -l ; echo "* * * * * flock -n /tmp/swat-agent.lockfile -c 'source $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1") | sort - | uniq - | crontab -
+  (crontab -l ; echo "* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1") | sort - | uniq - | crontab -
 }
 
 installAndConfigureDaemon() {
