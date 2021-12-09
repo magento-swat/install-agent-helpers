@@ -113,6 +113,7 @@ appConfigVarDBUser=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 appConfigVarDBPass=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['connection']['default']['password']);")
 appConfigVarDBHost=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?reset(explode(':', \$host)):\$host);")
 appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?end(explode(':', \$host)):'3306');")
+appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['table_prefix']);")
 
 [ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "Site Wide Analysis Tool Agent Directory $agentPath is not empty. Review and remove it <rm -r $agentPath>"
 
@@ -134,6 +135,7 @@ echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PASSWORD=$appConfigVarDBPass" 
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_HOST=$appConfigVarDBHost" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_TABLE_PREFIX=$appConfigDBPrefix" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=check.swat.magento.com:443" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443" >> "$agentPath/swat-agent.env"
