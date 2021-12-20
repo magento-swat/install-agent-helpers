@@ -141,6 +141,7 @@ echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=check.swat.magento.com:443" >> "
 echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
 
 printSuccess "Site Wide Analysis Tool Agent is successfully installed $agentPath"
 [ "$installDaemon" ] && printSuccess "Site Wide Analysis Agent has been installed" || printSuccess "Cronjob is configured. Review the command crontab -l"
