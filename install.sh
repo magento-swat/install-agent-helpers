@@ -79,6 +79,20 @@ canBeInstalledAsService() {
   done
 }
 
+isNonProductionEnvironment() {
+  echo "Are you installing agent on the non-production environment?"
+  select yn in "Yes" "No"; do
+    case $yn in
+        Yes )
+          return 0
+          exit;;
+        No ) 
+          return 2
+          break;;
+    esac
+  done
+}
+
 installAndConfigureCron() {
   (crontab -l ; echo "* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1") | sort - | uniq - | crontab -
 }
@@ -90,6 +104,8 @@ installAndConfigureDaemon() {
 checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
 # /usr/local/swat-agent see: https://refspecs.linuxfoundation.org/FHS_2.3/fhs-2.3.html
 canBeInstalledAsService && installDaemon=1
+sandboxEnv=False
+isNonProductionEnvironment && sandboxEnv=True
 [ "$installDaemon" ] && echo "Installing as a service" || echo "Installing agent as a cron"
 agentPath=$(askWriteableDirectory "Where to download Site Wide Analysis Agent" "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
@@ -142,6 +158,7 @@ echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443
 echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_IS_SANDBOX=$sandboxEnv" >> "$agentPath/swat-agent.env"
 
 printSuccess "Site Wide Analysis Tool Agent is successfully installed $agentPath"
 [ "$installDaemon" ] && printSuccess "Site Wide Analysis Agent has been installed" || printSuccess "Cronjob is configured. Review the command crontab -l"
