@@ -5,11 +5,14 @@ set -Eeuo pipefail
 installDaemon=
 agentPath=
 appName=
-license=
 agentConfigPath=
 appRoot=
-phpPath=$(command -v php)
+phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
+updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
+authDomain=${AGENT_INSTALLER_AUTH:-"commerce.adobe.io"}
+backendDomain=${AGENT_INSTALLER_BACKEND:-"check.swat.magento.com"}
+checkSignature=${AGENT_INSTALLER_CHECK_SIGNATURE:-"1"}
 
 error_exit() {
   echo "$1" 1>&2
@@ -109,8 +112,7 @@ isNonProductionEnvironment && sandboxEnv=True
 [ "$installDaemon" ] && echo "Installing as a service" || echo "Installing agent as a cron"
 agentPath=$(askWriteableDirectory "Where to download Site Wide Analysis Agent" "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
-appName=$(askRequiredField "Enter agent credentials App Name (Provided by Adobe Commerce)")
-license=$(askRequiredField "Enter agent credentials License Key (Provided by Adobe Commerce)")
+appName=$(askRequiredField "Enter company or site name")
 
 # Get Adobe Commerce Application Root
 while [[ -z "$appRoot" ]] || [[ -z "$(ls -A $appRoot)" ]] || [[ -z "$(ls -A $appRoot/app/etc)" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
@@ -134,16 +136,15 @@ appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; 
 [ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "Site Wide Analysis Tool Agent Directory $agentPath is not empty. Review and remove it <rm -r $agentPath>"
 
 set -x
-wget -qP "$agentPath" https://updater.swat.magento.com/launcher/launcher.linux-amd64.tar.gz
+wget -qP "$agentPath" "https://$updaterDomain/launcher/launcher.linux-amd64.tar.gz"
 tar -xf "$agentPath/launcher.linux-amd64.tar.gz" -C "$agentPath"
 set +x
-verifySignature
+[ "$checkSignature" == "1" ] && verifySignature
 [ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
 
 exportVariables="export "
 [ "$installDaemon" ] && exportVariables=""
-echo "${exportVariables}SWAT_AGENT_APP_NAME=$appName" > "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_LICENSE_KEY=$license" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_APP_NAME=\"$appName\"" > "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_PHP_PATH=$phpPath" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_MAGENTO_PATH=$appRoot" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_USER=$appConfigVarDBUser" >> "$agentPath/swat-agent.env"
@@ -153,8 +154,8 @@ echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_TABLE_PREFIX=$appConfigDBPrefix" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=check.swat.magento.com:443" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=login.swat.magento.com:443" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=${backendDomain}:443" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=https://${authDomain}/site-wide-analysis-tool/login" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
