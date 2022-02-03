@@ -97,7 +97,11 @@ isNonProductionEnvironment() {
 }
 
 installAndConfigureCron() {
-  (crontab -l ; echo "* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1") | sort - | uniq - | crontab -
+  local cronContent="$(crontab -l)"
+  local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1"
+  if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
+     (crontab -l; echo "$agentCommand") | crontab -
+  fi
 }
 
 installAndConfigureDaemon() {
