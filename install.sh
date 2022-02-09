@@ -34,7 +34,7 @@ askWriteableDirectory() {
   path=${path:-$defaultValue}
   path="$path/$swatAgentDirName"
   path="$(echo $path | sed 's/\/\//\//g')"
-  [ -d "$path" ] && error_exit "The directory $path is already exists."
+  [ -d "$path" ] && error_exit "The directory $path already exists."
   mkdir -p "$path"
   echo $(cd $path; pwd)
 }
@@ -45,7 +45,7 @@ askRequiredField() {
   while [ -z "$result" ]
   do
     read -r -p "$1: " result
-    [ -z "$result" ] && echo "This is required field. Please try again."
+    [ -z "$result" ] && echo "This is a required field. Please try again."
   done
   echo $result
 }
@@ -62,18 +62,18 @@ verifySignature() {
   echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > $agentPath/release.pub
 
   cd $agentPath;
-  openssl dgst -sha256 -verify release.pub -signature launcher.sha256 launcher.checksum || error_exit "Signature verification is failed"
+  openssl dgst -sha256 -verify release.pub -signature launcher.sha256 launcher.checksum || error_exit "Signature verification failed."
   cd -
 }
 
 canBeInstalledAsService() {
   [[ $(id -u) -eq 0 ]] && return;
 
-  echo "Do you have a root access for the infrastracture environment?"
+  echo "Do you have root access to the infrastructure environment?"
   select yn in "Yes" "No"; do
     case $yn in
-        Yes ) echo "Run the install script under your root user."
-              echo "The root access is required to install and configure a new service."
+        Yes ) echo "Run the install script as the root user."
+              echo "Root access is required to install and configure this service."
           exit;;
         No ) 
           return 2
@@ -83,7 +83,7 @@ canBeInstalledAsService() {
 }
 
 isNonProductionEnvironment() {
-  echo "Are you installing agent on the non-production environment?"
+  echo "Are you installing an agent on a non-production environment?"
   select yn in "Yes" "No"; do
     case $yn in
         Yes )
@@ -105,7 +105,7 @@ installAndConfigureCron() {
 }
 
 installAndConfigureDaemon() {
-  echo "Next step: Configure agent as a daemon service. Follow the installation guide 'Agent as a daemon service'"
+  echo "Next step: Configure the agent as a daemon service. Follow the installation guide 'Agent as a daemon service'."
 }
 
 checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
@@ -113,18 +113,18 @@ checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
 canBeInstalledAsService && installDaemon=1
 sandboxEnv=False
 isNonProductionEnvironment && sandboxEnv=True
-[ "$installDaemon" ] && echo "Installing as a service" || echo "Installing agent as a cron"
-agentPath=$(askWriteableDirectory "Where to download Site Wide Analysis Agent" "/usr/local/")
+[ "$installDaemon" ] && echo "Installing as a service." || echo "Installing agent as a cron."
+agentPath=$(askWriteableDirectory "Where to download the Site Wide Analysis Agent? " "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
-appName=$(askRequiredField "Enter company or site name")
+appName=$(askRequiredField "Enter the company or the site name: ")
 
 # Get Adobe Commerce Application Root
 while [[ -z "$appRoot" ]] || [[ -z "$(ls -A $appRoot)" ]] || [[ -z "$(ls -A $appRoot/app/etc)" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
 do
-  read -e -r -p "Enter Adobe Commerce Application Root (default:/var/www/html): " appRoot
+  read -e -r -p "Enter the Adobe Commerce Application Root directory (default:/var/www/html): " appRoot
   appRoot=${appRoot:-/var/www/html}
   if [[ ! -f "$appRoot/app/etc/env.php" ]]; then
-    echo "The directory $appRoot is not the Adobe Commerce Application Root"
+    echo "Directory $appRoot is not an Adobe Commerce Application Root."
     continue
   fi
   appRoot="$(cd $appRoot; pwd)"
@@ -137,7 +137,7 @@ appConfigVarDBHost=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?end(explode(':', \$host)):'3306');")
 appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['table_prefix']);")
 
-[ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "Site Wide Analysis Tool Agent Directory $agentPath is not empty. Review and remove it <rm -r $agentPath>"
+[ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
 
 set -x
 wget -qP "$agentPath" "https://$updaterDomain/launcher/launcher.linux-amd64.tar.gz"
@@ -165,5 +165,5 @@ echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.en
 echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_IS_SANDBOX=$sandboxEnv" >> "$agentPath/swat-agent.env"
 
-printSuccess "Site Wide Analysis Tool Agent is successfully installed $agentPath"
-[ "$installDaemon" ] && printSuccess "Site Wide Analysis Agent has been installed" || printSuccess "Cronjob is configured. Review the command crontab -l"
+printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
+[ "$installDaemon" ] && printSuccess "The Site Wide Analysis Agent has been installed." || printSuccess "The cronjob is configured. Review the command crontab -l"
