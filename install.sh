@@ -98,14 +98,15 @@ isNonProductionEnvironment() {
 
 installAndConfigureCron() {
   local cronContent="$(crontab -l)"
-  local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1"
+  local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '$agentPath/scheduler' >> $agentPath/errors.log 2>&1"
   if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
      (crontab -l; echo "$agentCommand") | crontab -
   fi
+  printSuccess "The cronjob has been configured. Review your cronjobs with the following command crontab -l"
 }
 
 installAndConfigureDaemon() {
-  echo "Next step: Configure the agent as a daemon service. Follow the installation guide 'Agent as a daemon service'."
+  printSuccess "Next steps: Configure the agent as a daemon service. Follow the installation guide https://devdocs.magento.com/tools/site-wide-analysis.html#run-the-agent"
 }
 
 checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
@@ -144,26 +145,26 @@ wget -qP "$agentPath" "https://$updaterDomain/launcher/launcher.linux-amd64.tar.
 tar -xf "$agentPath/launcher.linux-amd64.tar.gz" -C "$agentPath"
 set +x
 [ "$checkSignature" == "1" ] && verifySignature
-[ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
 
-exportVariables="export "
-[ "$installDaemon" ] && exportVariables=""
-echo "${exportVariables}SWAT_AGENT_APP_NAME=\"$appName\"" > "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_PHP_PATH=$phpPath" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_MAGENTO_PATH=$appRoot" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_USER=$appConfigVarDBUser" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PASSWORD=$appConfigVarDBPass" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_HOST=$appConfigVarDBHost" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_TABLE_PREFIX=$appConfigDBPrefix" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=${backendDomain}:443" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=https://${authDomain}/site-wide-analysis-tool/login" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_IS_SANDBOX=$sandboxEnv" >> "$agentPath/swat-agent.env"
+cat << EOF > $agentPath/config.yaml
+project:
+  appname: "$appName"
+application:
+  phppath: "$phpPath"
+  magentopath: "$appRoot"
+  database:
+    user: "$appConfigVarDBUser"
+    password: "$appConfigVarDBPass"
+    host: "$appConfigVarDBHost"
+    dbname: "$appConfigVarDBName"
+    port: "$appConfigVarDBPort"
+    tableprefix: "$appConfigDBPrefix"
+  checkregistrypath: "$agentPath/tmp"
+  issandbox: "$sandboxEnv"
+enableautoupgrade: true
+runchecksonstart: true
+loglevel: error
+EOF
 
 printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
-[ "$installDaemon" ] && printSuccess "The Site Wide Analysis Agent has been installed." || printSuccess "The cronjob is configured. Review the command crontab -l"
+[ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
