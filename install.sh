@@ -152,6 +152,7 @@ project:
 application:
   phppath: "$phpPath"
   magentopath: "$appRoot"
+  redisserverpath: "localhost:9200"
   database:
     user: "$appConfigVarDBUser"
     password: "$appConfigVarDBPass"
