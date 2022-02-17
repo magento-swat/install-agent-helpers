@@ -112,8 +112,8 @@ installAndConfigureDaemon() {
 checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
 # /usr/local/swat-agent see: https://refspecs.linuxfoundation.org/FHS_2.3/fhs-2.3.html
 canBeInstalledAsService && installDaemon=1
-sandboxEnv=False
-isNonProductionEnvironment && sandboxEnv=True
+sandboxEnv=false
+isNonProductionEnvironment && sandboxEnv=true
 [ "$installDaemon" ] && echo "Installing as a service." || echo "Installing agent as a cron."
 agentPath=$(askWriteableDirectory "Where to download the Site Wide Analysis Agent? " "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
@@ -160,7 +160,7 @@ application:
     port: "$appConfigVarDBPort"
     tableprefix: "$appConfigDBPrefix"
   checkregistrypath: "$agentPath/tmp"
-  issandbox: "$sandboxEnv"
+  issandbox: $sandboxEnv
 enableautoupgrade: true
 runchecksonstart: true
 loglevel: error
