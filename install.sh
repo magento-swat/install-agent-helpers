@@ -100,7 +100,6 @@ installAndConfigureCron() {
   local cronContent="$(crontab -l)"
   local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '$agentPath/scheduler' >> $agentPath/errors.log 2>&1"
   if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
-     (crontab -l; echo "$agentCommand") | crontab -
      printSuccess "Please configure cron to run the agent using the following command:"
      printSuccess "(crontab -l; echo \"$agentCommand\") | crontab -"
   fi
