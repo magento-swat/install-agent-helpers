@@ -198,7 +198,8 @@ if [ "$major" -eq 7 ]; then
     if [ "$minor" -gt 2 ]; then
         echo "php version - OK"
     else
-        error_exit "php engine reachable by $phpPath is $phpVersion and is not supported"
+        echo "You can specify another phpPath using env AGENT_INSTALLER_PHP."
+        error_exit "php engine reachable by $phpPath is $phpVersion and is not supported."
     fi
 else
     echo "php version - OK"
