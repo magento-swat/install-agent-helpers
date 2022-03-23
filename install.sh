@@ -185,8 +185,8 @@ fi
 
 phpVersion=$($phpPath -v | awk '{ print $2 }' | head -1)
 semver=( ${phpVersion//./ } )
-major="${semver[0]}"
-minor="${semver[1]}"
+major="${semver[0]:-'7'}"
+minor="${semver[1]:-'2'}"
 
 echo "**Checking php version."
 
