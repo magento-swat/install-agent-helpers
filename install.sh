@@ -171,7 +171,7 @@ else
   echo "Magento Found - OK"
 fi
 
-if nc -z $updaterDomain 443 2>/dev/null; then
+if nc -z "$updaterDomain" 443 2>/dev/null; then
     echo "Connect to API Server - OK"
 else
     error_exit "Can not connect to API Server $updaterDomain and port 443"
@@ -184,7 +184,7 @@ else
 fi
 
 phpVersion=$($phpPath -v | awk '{ print $2 }' | head -1)
-semver=( ${phpVersion//./ } )
+semver=( "${phpVersion//./ }" )
 major="${semver[0]:-'7'}"
 minor="${semver[1]:-'2'}"
 
@@ -201,7 +201,7 @@ else
     echo "php version - OK"
 fi
 
-mkdir $agentPath/tmp
+mkdir "$agentPath/tmp"
 
 if [ -w "$agentPath/tmp" ] ; then
   echo "Temporary Folder $agentPath/tmp is writeable - OK"
