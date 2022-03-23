@@ -170,7 +170,7 @@ EOF
 echo "** Install validation "
 
 if [[ ! -f "$appRoot/app/etc/env.php" ]]; then
-  error_exit "Magento not found."
+  error_exit "Magento not found in the path $appRoot"
 else
   echo "Magento Found - OK"
 fi
@@ -178,13 +178,13 @@ fi
 if nc -z $updaterDomain 443 2>/dev/null; then
     echo "Connect to API Server - OK"
 else
-    error_exit "Can not connect to API Server"
+    error_exit "Can not connect to API Server $updaterDomain and port 443"
 fi
 
 if [ -f "$agentPath/config.yaml" ]; then
     echo "Config File is created - OK"
 else
-    error_exit "Config File was not created."
+    error_exit "Config File $agentPath/config.yaml was not created."
 fi
 
 phpVersion=$($phpPath -v | awk '{ print $2 }' | head -1)
@@ -208,14 +208,15 @@ fi
 mkdir $agentPath/tmp
 
 if [ -w "$agentPath/tmp" ] ; then
-  echo "Temporary Folder is writeable - OK"
+  echo "Temporary Folder $agentPath/tmp is writeable - OK"
 else
-  error_exit "Temporary Folder in agent directory is not writable"
+  error_exit "Temporary Folder $agentPath/tmp in agent directory is not writable"
 fi
 firstRun=$("$agentPath/scheduler")
 if [[ "$firstRun" == *"is going to update"* ]]; then
   printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
   [ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
 else
-  error_exit "Failed to update launcher"
+  echo "Please review errors above."
+  error_exit "Failed to update launcher."
 fi
