@@ -32,7 +32,7 @@ askWriteableDirectory() {
   path="$(echo "$path" | sed 's/\/\//\//g')"
   [ -d "$path" ] && error_exit "The directory $path already exists."
   mkdir -p "$path"
-  echo $(cd "$path"; pwd)
+  echo "$(cd "$path"; pwd)"
 }
 
 askRequiredField() {
@@ -47,16 +47,15 @@ askRequiredField() {
 
 printSuccess() {
   local msg=( "$@" )
-  red=`tput setaf 1`
-  green=`tput setaf 2`
-  reset=`tput sgr0`
-  echo "${green}${msg}${reset}"
+  green="$(tput setaf 2)"
+  reset="$(tput sgr0)"
+  echo "${green}${msg[@]}${reset}"
 }
 
 verifySignature() {
-  echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > $agentPath/release.pub
+  echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > "$agentPath/release.pub"
 
-  cd $agentPath;
+  cd "$agentPath"
   openssl dgst -sha256 -verify release.pub -signature launcher.sha256 launcher.checksum || error_exit "Signature verification failed."
   cd -
 }
@@ -92,8 +91,10 @@ askIsProductionEnvironment() {
 }
 
 installAndConfigureCron() {
-  local cronContent="$(crontab -l)"
-  local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '$agentPath/scheduler' >> $agentPath/errors.log 2>&1"
+  local cronContent
+  local agentCommand
+  cronContent="$(crontab -l)"
+  agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '$agentPath/scheduler' >> $agentPath/errors.log 2>&1"
   if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
      printSuccess "Please configure cron to run the agent using the following command:"
      printSuccess "(crontab -l; echo \"$agentCommand\") | crontab -"
@@ -115,7 +116,7 @@ echo "Site Wide Analysis Agent will be installed into $agentPath"
 appName=$(askRequiredField "Enter the company or the site name: ")
 
 # Get Adobe Commerce Application Root
-while [[ -z "$appRoot" ]] || [[ -z "$(ls -A $appRoot)" ]] || [[ -z "$(ls -A $appRoot/app/etc)" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
+while [[ -z "$appRoot" ]] || [[ -z "$(ls -A "$appRoot")" ]] || [[ -z "$(ls -A "$appRoot/app/etc")" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
 do
   read -e -r -p "Enter the Adobe Commerce Application Root directory (default:/var/www/html): " appRoot
   appRoot=${appRoot:-/var/www/html}
@@ -123,7 +124,7 @@ do
     echo "Directory $appRoot is not an Adobe Commerce Application Root."
     continue
   fi
-  appRoot="$(cd $appRoot; pwd)"
+  appRoot="$(cd "$appRoot"; pwd)"
 done
 
 appConfigVarDBName=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['connection']['default']['dbname']);")
@@ -133,7 +134,7 @@ appConfigVarDBHost=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?end(explode(':', \$host)):'3306');")
 appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['table_prefix']);")
 
-[ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
+[ -d "$agentPath" ] && [ -n "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
 
 set -x
 wget -qP "$agentPath" "https://$updaterDomain/launcher/launcher.linux-amd64.tar.gz"
@@ -141,7 +142,7 @@ tar -xf "$agentPath/launcher.linux-amd64.tar.gz" -C "$agentPath"
 set +x
 [ "$checkSignature" == "1" ] && verifySignature
 
-cat << EOF > $agentPath/config.yaml
+cat << EOF > "$agentPath/config.yaml"
 project:
   appname: "$appName"
 application:
@@ -163,4 +164,9 @@ loglevel: error
 EOF
 
 printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
-[ "$installDaemon" ] && installAndConfigureDaemon || installAndConfigureCron
+if [ "$installDaemon" ]
+then
+  installAndConfigureDaemon
+else
+  installAndConfigureCron
+fi
