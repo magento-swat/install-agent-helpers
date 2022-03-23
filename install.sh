@@ -82,8 +82,8 @@ canBeInstalledAsService() {
   done
 }
 
-isNonProductionEnvironment() {
-  echo "Are you installing an agent on a non-production environment?"
+askIsProductionEnvironment() {
+  echo "Do you install the agent on a production environment?"
   select yn in "Yes" "No"; do
     case $yn in
         Yes )
@@ -100,9 +100,9 @@ installAndConfigureCron() {
   local cronContent="$(crontab -l)"
   local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '$agentPath/scheduler' >> $agentPath/errors.log 2>&1"
   if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
-     (crontab -l; echo "$agentCommand") | crontab -
+     printSuccess "Please configure cron to run the agent using the following command:"
+     printSuccess "(crontab -l; echo \"$agentCommand\") | crontab -"
   fi
-  printSuccess "The cronjob has been configured. Review your cronjobs with the following command crontab -l"
 }
 
 installAndConfigureDaemon() {
@@ -113,7 +113,7 @@ checkDependencies "php" "wget" "awk" "nice" "grep" "openssl"
 # /usr/local/swat-agent see: https://refspecs.linuxfoundation.org/FHS_2.3/fhs-2.3.html
 canBeInstalledAsService && installDaemon=1
 sandboxEnv=false
-isNonProductionEnvironment && sandboxEnv=true
+askIsProductionEnvironment || sandboxEnv=true
 [ "$installDaemon" ] && echo "Installing as a service." || echo "Installing agent as a cron."
 agentPath=$(askWriteableDirectory "Where to download the Site Wide Analysis Agent? " "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
