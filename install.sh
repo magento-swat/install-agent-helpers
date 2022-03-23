@@ -9,8 +9,6 @@ appRoot=
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
 updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
-authDomain=${AGENT_INSTALLER_AUTH:-"commerce.adobe.io"}
-backendDomain=${AGENT_INSTALLER_BACKEND:-"check.swat.magento.com"}
 checkSignature=${AGENT_INSTALLER_CHECK_SIGNATURE:-"1"}
 
 error_exit() {
@@ -26,31 +24,29 @@ checkDependencies() {
 }
 
 askWriteableDirectory() {
-  local promptMessage="$1"
   local defaultValue="$2"
   local path=
   read -e -r -p "$1 (default: $2): " path
   path=${path:-$defaultValue}
   path="$path/$swatAgentDirName"
-  path="$(echo $path | sed 's/\/\//\//g')"
+  path="$(echo "$path" | sed 's/\/\//\//g')"
   [ -d "$path" ] && error_exit "The directory $path already exists."
   mkdir -p "$path"
-  echo $(cd $path; pwd)
+  echo $(cd "$path"; pwd)
 }
 
 askRequiredField() {
-  local promptMessage="$1"
   local result=
   while [ -z "$result" ]
   do
     read -r -p "$1: " result
     [ -z "$result" ] && echo "This is a required field. Please try again."
   done
-  echo $result
+  echo "$result"
 }
 
 printSuccess() {
-  local msg="$@"
+  local msg=( "$@" )
   red=`tput setaf 1`
   green=`tput setaf 2`
   reset=`tput sgr0`
