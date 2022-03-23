@@ -5,7 +5,6 @@ set -Eeuo pipefail
 installDaemon=
 agentPath=
 appName=
-agentConfigPath=
 appRoot=
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
