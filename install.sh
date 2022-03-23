@@ -49,7 +49,7 @@ printSuccess() {
   local msg=( "$@" )
   green="$(tput setaf 2)"
   reset="$(tput sgr0)"
-  echo "${green}${msg[@]}${reset}"
+  echo "${green}${msg[*]}${reset}"
 }
 
 verifySignature() {
