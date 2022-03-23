@@ -5,7 +5,6 @@ set -Eeuo pipefail
 installDaemon=
 agentPath=
 appName=
-agentConfigPath=
 appRoot=
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
@@ -27,41 +26,38 @@ checkDependencies() {
 }
 
 askWriteableDirectory() {
-  local promptMessage="$1"
   local defaultValue="$2"
   local path=
   read -e -r -p "$1 (default: $2): " path
   path=${path:-$defaultValue}
   path="$path/$swatAgentDirName"
-  path="$(echo $path | sed 's/\/\//\//g')"
+  path="$(echo "$path" | sed 's/\/\//\//g')"
   [ -d "$path" ] && error_exit "The directory $path already exists."
   mkdir -p "$path"
-  echo $(cd $path; pwd)
+  echo "$(cd "$path"; pwd)"
 }
 
 askRequiredField() {
-  local promptMessage="$1"
   local result=
   while [ -z "$result" ]
   do
     read -r -p "$1: " result
     [ -z "$result" ] && echo "This is a required field. Please try again."
   done
-  echo $result
+  echo "$result"
 }
 
 printSuccess() {
-  local msg="$@"
-  red=`tput setaf 1`
-  green=`tput setaf 2`
-  reset=`tput sgr0`
+  local msg=( "$@" )
+  green=$(tput setaf 2)
+  reset=$(tput sgr0)
   echo "${green}${msg}${reset}"
 }
 
 verifySignature() {
-  echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > $agentPath/release.pub
+  echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > "$agentPath/release.pub"
 
-  cd $agentPath;
+  cd "$agentPath"
   openssl dgst -sha256 -verify release.pub -signature launcher.sha256 launcher.checksum || error_exit "Signature verification failed."
   cd -
 }
@@ -97,8 +93,10 @@ isNonProductionEnvironment() {
 }
 
 installAndConfigureCron() {
-  local cronContent="$(crontab -l)"
-  local agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1"
+  local cronContent
+  local agentCommand
+  cronContent="$(crontab -l)"
+  agentCommand="* * * * * flock -n /tmp/swat-agent.lockfile -c '. $agentPath/swat-agent.env; $agentPath/scheduler' >> $agentPath/errors.log 2>&1"
   if [[ ! ("$cronContent" =~ "swat-agent") ]]; then
      (crontab -l; echo "$agentCommand") | crontab -
   fi
@@ -119,7 +117,7 @@ echo "Site Wide Analysis Agent will be installed into $agentPath"
 appName=$(askRequiredField "Enter the company or the site name: ")
 
 # Get Adobe Commerce Application Root
-while [[ -z "$appRoot" ]] || [[ -z "$(ls -A $appRoot)" ]] || [[ -z "$(ls -A $appRoot/app/etc)" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
+while [[ -z "$appRoot" ]] || [[ -z "$(ls -A "$appRoot")" ]] || [[ -z "$(ls -A "$appRoot/app/etc")" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
 do
   read -e -r -p "Enter the Adobe Commerce Application Root directory (default:/var/www/html): " appRoot
   appRoot=${appRoot:-/var/www/html}
@@ -127,7 +125,7 @@ do
     echo "Directory $appRoot is not an Adobe Commerce Application Root."
     continue
   fi
-  appRoot="$(cd $appRoot; pwd)"
+  appRoot="$(cd "$appRoot"; pwd)"
 done
 
 appConfigVarDBName=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['connection']['default']['dbname']);")
@@ -137,7 +135,7 @@ appConfigVarDBHost=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?end(explode(':', \$host)):'3306');")
 appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['table_prefix']);")
 
-[ -d "$agentPath" ] && [ ! -z "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
+[ -d "$agentPath" ] && [ -n "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
 
 set -x
 wget -qP "$agentPath" "https://$updaterDomain/launcher/launcher.linux-amd64.tar.gz"
@@ -158,8 +156,8 @@ echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_PORT=$appConfigVarDBPort" >> "
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_NAME=$appConfigVarDBName" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_DB_TABLE_PREFIX=$appConfigDBPrefix" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_APPLICATION_CHECK_REGISTRY_PATH=$agentPath/tmp" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=${backendDomain}:443" >> "$agentPath/swat-agent.env"
-echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=https://${authDomain}/site-wide-analysis-tool/login" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_BACKEND_HOST=$backendDomain:443" >> "$agentPath/swat-agent.env"
+echo "${exportVariables}SWAT_AGENT_LOGIN_BACKEND_HOST=https://$authDomain/site-wide-analysis-tool/login" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_RUN_CHECKS_ON_START=1" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_LOG_LEVEL=error" >> "$agentPath/swat-agent.env"
 echo "${exportVariables}SWAT_AGENT_ENABLE_AUTO_UPGRADE=true" >> "$agentPath/swat-agent.env"
