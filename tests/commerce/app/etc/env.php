@@ -1,11 +1,12 @@
 <?php
+
 return array (
-  'db' => 
+  'db' =>
   array (
     'table_prefix' => '',
-    'connection' => 
+    'connection' =>
     array (
-      'default' => 
+      'default' =>
       array (
         'host' => '127.0.0.1',
         'username' => 'root',
@@ -15,4 +16,3 @@ return array (
     )
   )
 );
-
