@@ -132,7 +132,7 @@ appConfigVarDBUser=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php';
 appConfigVarDBPass=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['connection']['default']['password']);")
 appConfigVarDBHost=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?reset(explode(':', \$host)):\$host);")
 appConfigVarDBPort=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$host = \$config['db']['connection']['default']['host']; echo(strpos(\$host,':')!==false?end(explode(':', \$host)):'3306');")
-appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; echo(\$config['db']['table_prefix']);")
+appConfigDBPrefix=$($phpPath -r "\$config = require '$appRoot/app/etc/env.php'; \$prefix = isset(\$config['db']['table_prefix']) ? \$config['db']['table_prefix'] : ''; echo \$prefix;")
 
 [ -d "$agentPath" ] && [ -n "$(ls -A "$agentPath")" ] && error_exit "The Site Wide Analysis Tool Agent Directory $agentPath is not empty. Please review and remove it <rm -r $agentPath>"
 
