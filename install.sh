@@ -47,8 +47,8 @@ askRequiredField() {
 
 printSuccess() {
   local msg=( "$@" )
-  green="$(tput setaf 2)"
-  reset="$(tput sgr0)"
+  green="$([ "$TERM" ] && tput setaf 2)"
+  reset="$([ "$TERM" ] && tput sgr0)"
   echo "${green}${msg[*]}${reset}"
 }
 
