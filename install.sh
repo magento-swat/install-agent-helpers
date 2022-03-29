@@ -188,7 +188,7 @@ semver=( "${phpVersion//./ }" )
 major="${semver[0]:-'7'}"
 minor="${semver[1]:-'2'}"
 
-echo "**Checking php version."
+echo "** Checking php version."
 
 if [[ "$major" == 7 ]]; then
     if [[ "$minor" -gt "2" ]]; then
