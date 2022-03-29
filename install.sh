@@ -171,10 +171,11 @@ else
   echo "Magento Found - OK"
 fi
 
-if nc -z "$updaterDomain" 443 2>/dev/null; then
-    echo "Connect to API Server - OK"
-else
+
+if ! wget -q --spider "https://$updaterDomain"; then
     error_exit "Can not connect to API Server $updaterDomain and port 443"
+else
+    echo "Connect to API Server - OK"
 fi
 
 if [ -f "$agentPath/config.yaml" ]; then
