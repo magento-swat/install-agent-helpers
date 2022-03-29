@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+expect -f /app/tests/test-as-root-production
+exitCode="$?"
+
+if [ "$exitCode" -gt 0 ]
+then
+  echo "Success"
+  exit 0
+fi
+
+echo "Could not catch the error";
+exit 127
