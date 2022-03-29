@@ -6,6 +6,7 @@ installDaemon=
 agentPath=
 appName=
 appRoot=
+skipFirstRun=${AGENT_SKIP_FIRST_RUN:-0}
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
 updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
@@ -171,13 +172,11 @@ else
   echo "Magento Found - OK"
 fi
 
-if wget --timeout 5 --connect-timeout=5  --tries=1 --spider --verbose "https://$updaterDomain:443" 2>&1 > /dev/null | grep -q "connected"
-then
-  echo "Connect to API Server - OK"
+if ! wget -q --timeout=5 --connect-timeout=5 --spider "https://$updaterDomain/launcher/"; then
+    error_exit "Can not connect to API Server $updaterDomain and port 443"
 else
-  error_exit "Can not connect to API Server $updaterDomain and port 443"
+    echo "Connect to API Server - OK"
 fi
-
 if [ -f "$agentPath/config.yaml" ]; then
     echo "Config File is created - OK"
 else
@@ -191,8 +190,8 @@ minor="${semver[1]:-'2'}"
 
 echo "**Checking php version."
 
-if [ "$major" -eq 7 ]; then
-    if [ "$minor" -gt 2 ]; then
+if [[ "$major" == 7 ]]; then
+    if [[ "$minor" -gt "2" ]]; then
         echo "php version - OK"
     else
         echo "You can specify another phpPath using env AGENT_INSTALLER_PHP."
@@ -209,7 +208,12 @@ if [ -w "$agentPath/tmp" ] ; then
 else
   error_exit "Temporary Folder $agentPath/tmp in agent directory is not writable"
 fi
-firstRun=$("$agentPath/scheduler")
+if [ "$skipFirstRun" ]; then
+  firstRun="is going to update"
+else
+  firstRun=$("$agentPath/scheduler")
+fi
+
 if [[ "$firstRun" == *"is going to update"* ]]; then
   printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
   if [ "$installDaemon" ]
