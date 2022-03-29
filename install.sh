@@ -6,6 +6,7 @@ installDaemon=
 agentPath=
 appName=
 appRoot=
+skipFirstRun=${AGENT_SKIP_FIRST_RUN:-}
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
 updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
@@ -163,10 +164,65 @@ runchecksonstart: true
 loglevel: error
 EOF
 
-printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
-if [ "$installDaemon" ]
-then
-  installAndConfigureDaemon
+echo "** Install validation "
+
+if [[ ! -f "$appRoot/app/etc/env.php" ]]; then
+  error_exit "Magento not found in the path $appRoot"
 else
-  installAndConfigureCron
+  echo "Magento Found - OK"
+fi
+
+if ! wget -q --timeout=5 --connect-timeout=5 --spider "https://$updaterDomain/launcher/"; then
+    error_exit "Can not connect to API Server $updaterDomain and port 443"
+else
+    echo "Connect to API Server - OK"
+fi
+if [ -f "$agentPath/config.yaml" ]; then
+    echo "Config File is created - OK"
+else
+    error_exit "Config File $agentPath/config.yaml was not created."
+fi
+
+phpVersion=$($phpPath -v | awk '{ print $2 }' | head -1)
+semver=( "${phpVersion//./ }" )
+major="${semver[0]:-'7'}"
+minor="${semver[1]:-'2'}"
+
+echo "** Checking php version."
+
+if [[ "$major" == 7 ]]; then
+    if [[ "$minor" -gt "2" ]]; then
+        echo "php version - OK"
+    else
+        echo "You can specify another phpPath using env AGENT_INSTALLER_PHP."
+        error_exit "php engine reachable by $phpPath is $phpVersion and is not supported."
+    fi
+else
+    echo "php version - OK"
+fi
+
+mkdir "$agentPath/tmp"
+
+if [ -w "$agentPath/tmp" ] ; then
+  echo "Temporary Folder $agentPath/tmp is writeable - OK"
+else
+  error_exit "Temporary Folder $agentPath/tmp in agent directory is not writable"
+fi
+if [ "$skipFirstRun" ]; then
+  firstRun="is going to update"
+else
+  firstRun=$("$agentPath/scheduler")
+fi
+
+if [[ "$firstRun" == *"is going to update"* ]]; then
+  printSuccess "The Site Wide Analysis Tool Agent has been successfully installed at $agentPath"
+  if [ "$installDaemon" ]
+  then
+    installAndConfigureDaemon
+  else
+    installAndConfigureCron
+  fi
+else
+  echo "Please review errors above."
+  error_exit "Failed to update launcher."
 fi
