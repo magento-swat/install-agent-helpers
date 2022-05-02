@@ -53,6 +53,44 @@ printSuccess() {
   echo "${green}${msg[*]}${reset}"
 }
 
+checkJwt() {
+  local is_sandbox=$1
+  local php_path=$2
+  local environment="production"
+  if [[ $is_sandbox ]]; then environment="sandbox"; fi
+  if [[ -f pub/index.php ]]
+  then
+    # shellcheck disable=SC2016
+    $php_path -r '
+      require "app/bootstrap.php";
+      \Magento\Framework\App\Bootstrap::create(BP, $_SERVER);
+      try {
+          $result = [];
+          $om = \Magento\Framework\App\ObjectManager::getInstance();
+
+          $environmentFactory = $om->create(\Magento\ServicesConnector\Model\EnvironmentFactory::class);
+          $jwtToken = $om->create(\Magento\ServicesConnector\Api\JwtTokenInterface::class);
+
+          $envObject = $environmentFactory->create("'$environment'");
+  		$apiKey = $envObject->getApiKey("swat");
+  		$privateKey = $envObject->getPrivateKey("swat");
+  		$signature = $jwtToken->getSignature($privateKey);
+          $result["ApiKey"] = $apiKey;
+  		$result["Signature"] = $signature;
+  		echo json_encode($result);
+  		return 0;
+      } catch (Exception $e) {
+        echo $e;
+        return 1;
+      }'
+      exit_code=$?
+      if [[ $exit_code != 0 ]]; then error_exit "php error"; fi
+      printf "\nJWT Token - OK\n"
+  else
+    error_exit "pub/index.php does not exist"
+  fi
+}
+
 verifySignature() {
   echo -n "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQ0lqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FnOEFNSUlDQ2dLQ0FnRUE0M2FBTk1WRXR3eEZBdTd4TE91dQpacG5FTk9pV3Y2aXpLS29HendGRitMTzZXNEpOR3lRS1Jha0MxTXRsU283VnFPWnhUbHZSSFhQZWt6TG5vSHVHCmdmNEZKa3RPUEE2S3d6cjF4WFZ3RVg4MEFYU1JNYTFadzdyOThhenh0ZHdURVh3bU9GUXdDcjYramFOM3ErbUoKbkRlUWYzMThsclk0NVJxWHV1R294QzBhbWVoakRnTGxJUSs1d1kxR1NtRGRiaDFJOWZqMENVNkNzaFpsOXFtdgorelhjWGh4dlhmTUU4MUZsVUN1elRydHJFb1Bsc3dtVHN3ODNVY1lGNTFUak8zWWVlRno3RFRhRUhMUVVhUlBKClJtVzdxWE9kTGdRdGxIV0t3V2ppMFlrM0d0Ylc3NVBMQ2pGdEQzNytkVDFpTEtzYjFyR0VUYm42V3I0Nno4Z24KY1Q4cVFhS3pYRThoWjJPSDhSWjN1aFVpRHhZQUszdmdsYXJSdUFacmVYMVE2ZHdwYW9ZcERKa29XOXNjNXlkWApBTkJsYnBjVXhiYkpaWThLS0lRSURnTFdOckw3SVNxK2FnYlRXektFZEl0Ni9EZm1YUnJlUmlMbDlQMldvOFRyCnFxaHNHRlZoRHZlMFN6MjYyOU55amgwelloSmRUWXRpdldxbGl6VTdWbXBob1NrVnNqTGtwQXBiUUNtVm9vNkgKakJmdU1sY1JPeWI4TXJCMXZTNDJRU1MrNktkMytwR3JyVnh0akNWaWwyekhSSTRMRGwrVzUwR1B6LzFkeEw2TgprZktZWjVhNUdCZm00aUNlaWVNa3lBT2lKTkxNa1cvcTdwM200ejdUQjJnbWtldm1aU3Z5MnVMNGJLYlRoYXRlCm9sdlpFd253WWRxaktkcVkrOVM1UlNVQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==" | base64 -d > "$agentPath/release.pub"
 
@@ -70,7 +108,7 @@ canBeInstalledAsService() {
         Yes ) echo "Run the install script as the root user."
               echo "Root access is required to install and configure this service."
           exit;;
-        No ) 
+        No )
           return 2
           break;;
     esac
@@ -84,7 +122,7 @@ askIsProductionEnvironment() {
         Yes )
           return 0
           exit;;
-        No ) 
+        No )
           return 2
           break;;
     esac
@@ -208,6 +246,10 @@ if [ -w "$agentPath/tmp" ] ; then
 else
   error_exit "Temporary Folder $agentPath/tmp in agent directory is not writable"
 fi
+cd "$appRoot"
+echo "Your default path to php - $phpPath (to override you might set AGENT_INSTALLER_PHP as env variable before running installer)"
+checkJwt $sandboxEnv "$phpPath"
+cd "$agentPath"
 if [ "$skipFirstRun" ]; then
   firstRun="is going to update"
 else
