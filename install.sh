@@ -72,13 +72,13 @@ checkJwt() {
           $jwtToken = $om->create(\Magento\ServicesConnector\Api\JwtTokenInterface::class);
 
           $envObject = $environmentFactory->create("'$environment'");
-  		$apiKey = $envObject->getApiKey("swat");
-  		$privateKey = $envObject->getPrivateKey("swat");
-  		$signature = $jwtToken->getSignature($privateKey);
+          $apiKey = $envObject->getApiKey("swat");
+          $privateKey = $envObject->getPrivateKey("swat");
+          $signature = $jwtToken->getSignature($privateKey);
           $result["ApiKey"] = $apiKey;
-  		$result["Signature"] = $signature;
-  		echo json_encode($result);
-  		return 0;
+          $result["Signature"] = $signature;
+          echo json_encode($result);
+          return 0;
       } catch (Exception $e) {
         echo $e;
         return 1;
