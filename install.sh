@@ -6,7 +6,7 @@ installDaemon=
 agentPath=
 appName=
 appRoot=
-skipFirstRun=${AGENT_SKIP_FIRST_RUN:-}
+isInDevMode=${AGENT_DEV_MODE:-}
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
 updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
@@ -54,11 +54,12 @@ printSuccess() {
 }
 
 checkJwt() {
+  if [[ $isInDevMode ]]; then echo "JWT Token - OK"; exit 0; fi
   local is_sandbox=$1
   local php_path=$2
   local environment="production"
   if [[ $is_sandbox ]]; then environment="sandbox"; fi
-  if [[ -f pub/index.php ]]
+  if [[ -f app/etc/env.php ]]
   then
     # shellcheck disable=SC2016
     $php_path -r '
@@ -246,11 +247,9 @@ if [ -w "$agentPath/tmp" ] ; then
 else
   error_exit "Temporary Folder $agentPath/tmp in agent directory is not writable"
 fi
-cd "$appRoot"
 echo "Your default path to php - $phpPath (to override you might set AGENT_INSTALLER_PHP as env variable before running installer)"
-checkJwt $sandboxEnv "$phpPath"
-cd "$agentPath"
-if [ "$skipFirstRun" ]; then
+( cd "$appRoot" ; checkJwt $sandboxEnv "$phpPath" )
+if [ "$isInDevMode" ]; then
   firstRun="is going to update"
 else
   firstRun=$("$agentPath/scheduler")
