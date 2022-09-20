@@ -154,6 +154,7 @@ askIsProductionEnvironment || sandboxEnv=true
 agentPath=$(askWriteableDirectory "Where to download the Site Wide Analysis Agent? " "/usr/local/")
 echo "Site Wide Analysis Agent will be installed into $agentPath"
 appName=$(askRequiredField "Enter the company or the site name: ")
+logLevel=$(askRequiredField "Enter desired log level(error/info): ")
 
 # Get Adobe Commerce Application Root
 while [[ -z "$appRoot" ]] || [[ -z "$(ls -A "$appRoot")" ]] || [[ -z "$(ls -A "$appRoot/app/etc")" ]] || [[ ! -f "$appRoot/app/etc/env.php" ]]
@@ -200,7 +201,7 @@ application:
   issandbox: $sandboxEnv
 enableautoupgrade: true
 runchecksonstart: true
-loglevel: error
+loglevel: "$logLevel"
 EOF
 
 echo "** Install validation "
