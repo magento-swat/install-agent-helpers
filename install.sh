@@ -75,6 +75,11 @@ checkJwt() {
           $envObject = $environmentFactory->create("'$environment'");
           $apiKey = $envObject->getApiKey("swat");
           $privateKey = $envObject->getPrivateKey("swat");
+          $privateKey = str_replace("BEGIN PRIVATE KEY", "BEGINPRIVATEKEY", $privateKey);
+          $privateKey = str_replace("END PRIVATE KEY", "ENDPRIVATEKEY", $privateKey);
+          $privateKey = str_replace(" ", "\n", $privateKey);
+          $privateKey = str_replace("BEGINPRIVATEKEY", "BEGIN PRIVATE KEY", $privateKey);
+          $privateKey = str_replace("ENDPRIVATEKEY", "END PRIVATE KEY", $privateKey);
           $signature = $jwtToken->getSignature($privateKey);
           $result["ApiKey"] = $apiKey;
           $result["Signature"] = $signature;
