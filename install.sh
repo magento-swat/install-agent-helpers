@@ -9,7 +9,7 @@ appRoot=
 isInDevMode=${AGENT_DEV_MODE:-}
 phpPath=${AGENT_INSTALLER_PHP:-"$(command -v php)"}
 swatAgentDirName="swat-agent"
-updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.swat.magento.com"}
+updaterDomain=${AGENT_INSTALLER_UPDATER:-"updater.supportinsights.adobe.com"}
 checkSignature=${AGENT_INSTALLER_CHECK_SIGNATURE:-"1"}
 
 error_exit() {
